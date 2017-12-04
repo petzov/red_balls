@@ -10,6 +10,10 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>Bouncing Balls in rectangle using D3js - by Atul</title>
+    <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
     <script src="http://d3js.org/d3.v4.min.js"></script>
      <script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script>
      <!-- <script src="https://d3js.org/d3-drag.v1.min.js"></script> -->
@@ -84,6 +88,65 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
     }
  
+
+    function Spout(svg, x, y, id, color) {
+        this.posX = x; // cx
+        this.posY = y; // cy
+        this.color = color;
+        this.svg = svg; // parent SVG
+        this.id = id; // id of paddle
+
+        this.data = [this.id]; // allow us to use d3.enter()
+        var thisobj = this; // i like to use thisobj instead of this. this many times not reliable particularly handling evnet
+
+        this.Draw = function () {
+            var svg = thisobj.svg;
+            var spout = svg.selectAll('#' + thisobj.id)
+                        .data(thisobj.data)
+                    ;
+            spout.enter()
+                .append("rect")
+                .attr("id" , thisobj.id)
+                .attr('class' , 'spout')
+                .attr('x' , thisobj.posX)
+                .attr('y' , thisobj.posY)
+                .attr('width' , 15)
+                .attr( 'height' , 10)
+                .style("fill",  thisobj.color)
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+                ;
+
+            
+
+            function dragstarted(d) {
+              d3.select(this).raise().classed("active", true);
+            }
+
+            function dragged(d) {
+              d3.select(this).attr("x", d.x = d3.event.x);
+              if (d3.event.x < (svg.attr('width')-50)){
+                console.log("d3 X = "+d3.event.x+" svg.'width'="+svg.attr('width'));
+                thisobj.posX = d3.event.x;
+                }
+                thisobj.Draw();
+              //thisobj.posY = d3.event.y;
+            }
+
+            function dragended(d) {
+              d3.select(this).classed("active", false);
+            }
+
+        }
+            
+        thisobj.Draw();
+
+
+    }
+
+
 
     function Goal(svg, x, y, id, color, height) {
         this.posX = x; // cx
@@ -169,10 +232,11 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
                 .append("circle")
                 .attr("id" , thisobj.id) 
                 .attr("class" , "ball")
-                .attr("r" , thisobj.radius)
-                .attr("weight" , thisobj.weight)
+                //.attr("r" , thisobj.radius)
+                //.attr("weight" , thisobj.weight)
                 .style("fill", thisobj.color)
                 ;
+            
             ball
                 //.transition()//.duration(50)
                 .attr("cx", thisobj.posX)
@@ -241,11 +305,9 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     function DeleteBall(id){
         console.log("DeleteBall:"+id);
         ScoreGoal(0,0);             
-        
-        d3.selectAll('#'+id).remove();
         balls.splice(FindBallById(id), 1);
-        AddBall(10,10);
-        balls[0].Draw();
+        d3.selectAll('.ball').remove();
+        AddBall();
     }
 
     function FindBallById(id){
@@ -263,8 +325,10 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         console.log("Add Paddle:"+svg.id);
     }
 
-    function AddBall(x,y){
-        balls.push(new Ball(svg, x, y, 'b'+ balls_id, 'green', Math.PI / 3, 10));
+
+    function AddBall(){
+        x = spout[0].posX;
+        balls.push(new Ball(svg, x, 10, 'b'+ balls_id, 'green', Math.PI / 3, 10));
         balls_id ++;
     }
 
@@ -288,6 +352,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
                 ball.Draw();
                 console.log("Impact top:" + ball.posY);
+                cost +=5;
+                $("#cost").html(cost);
 
                
             }
@@ -314,31 +380,23 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         ball = balls[ball];
         goal = goals[goal];
         if (ball.posX + ball.radius +10 >= goal.posX && ball.posY > goal.posY && ball.posY < (goal.posY + goal.height)  ){
-            ball.radius = 10;
-            score += 20;
+            score += ball.radius;
+            ball.radius = 0;
+            
+            $("#score").html(score);
             console.log ("      Goal!!! Score=" + score );
         }    
     }
 
-    function CheckCollision(ball1, ball2) {
-        var absx = Math.abs(parseFloat(ball2.posX) - parseFloat(ball1.posX));
-        var absy = Math.abs(parseFloat(ball2.posY) - parseFloat(ball1.posY));
 
-        // find distance between two balls.
-        var distance = (absx * absx) + (absy * absy);
-        distance = Math.sqrt(distance);
-        // check if distance is less than sum of two radius - if yes, collision
-        if (distance < (parseFloat(ball1.radius) + parseFloat(ball2.radius))) {
-            return true;
-        }
-        return false;
-    }
 
     var balls = []; // global array representing balls
     var balls_id = 1;
     var paddles = []; // global array representing paddles
     var goals = [];
+    var spout = [];
     var score = 0;
+    var cost = 0;
     var t = d3.timer(function () {
         for (var i = 0; i < balls.length; ++i) {
             var r = balls[i].Move();
@@ -353,58 +411,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
     //courtsey thanks to several internet sites for formulas
     //detect collision, find intersecting point and set new speed+direction for each ball based on weight (weight=radius)
-    function ProcessCollision(ball1, ball2) {
-
-        if (ball2 <= ball1)
-            return;
-        if (ball1 >= (balls.length-1) || ball2 >= balls.length )
-            return;
-
-        ball1 = balls[ball1];
-        ball2 = balls[ball2];
-
-        if ( CheckCollision(ball1, ball2) ) {
-            // intersection point
-            var interx = ((ball1.posX * ball2.radius) + ball2.posX * ball1.radius)
-            / (ball1.radius + ball2.radius);
-            var intery = ((ball1.posY * ball2.radius) + ball2.posY  * ball1.radius)
-            / (ball1.radius + ball2.radius);
-
-            // show collision effect for 500 miliseconds
-            var intersectBall = svg.select('#' + ball1.id + '_intersect');
-            intersectBall.attr({ 'cx': interx, 'cy': intery, 'r': 5 ,'fill': 'black' })
-                        .transition()
-                        .duration(500)
-                        .attr('r', 0);
-
-            // calculate new velocity of each ball.
-            var vx1 = (ball1.vx * (ball1.weight - ball2.weight)
-                + (2 * ball2.weight * ball2.vx )) / (ball1.weight + ball2.weight);
-            var vy1 = (ball1.vy * (ball1.weight - ball2.weight)
-                + (2 * ball2.weight * ball2.vy)) / (ball1.weight + ball2.weight);
-            var vx2 = (ball2.vx * (ball2.weight - ball1.weight)
-                + (2 * ball1.weight * ball1.vx)) / (ball1.weight + ball2.weight);
-            var vy2 = (ball2.vy * (ball2.weight - ball1.weight)
-                + (2 * ball1.weight * ball1.vy)) / (ball1.weight + ball2.weight);
-
-            //set velocities for both balls
-            ball1.vx = vx1;
-            ball1.vy = vy1;
-            ball2.vx = vx2;
-            ball2.vy = vy2;
-
-            //ensure one ball is not inside others. distant apart till not colliding
-            while (CheckCollision(ball1, ball2)) {
-                ball1.posX += ball1.vx;
-                ball1.posY += ball1.vy;
-
-                ball2.posX += ball2.vx;
-                ball2.posY += ball2.vy;
-            }
-            ball1.Draw();
-            ball2.Draw();
-        }
-    }
+    
 
     function Initialize(containerId) {
         var height = document.getElementById(containerId).clientHeight;
@@ -427,8 +434,10 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         ;
 
       //  balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
-        balls.push(new Ball(svg, 10, 10, 'b0', 'green', Math.PI / 3, 10));
+        spout.push(new Spout(svg, 30, 0, 's0', 'red'));
+        balls.push(new Ball(svg, spout[0].posX, 10, 'b0', 'green', Math.PI / 3, 10));
         //AddBall(10,10);
+        
         goals.push(new Goal(svg, svg.attr('width') - 3 , 20, 'g1', 'red', 50));
         paddles.push(new Paddle(svg, 90, 200, 'p1', 'green', 50));
         paddles.push(new Paddle(svg, 280, 200, 'p2', 'red', 50));
@@ -531,6 +540,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         </div>
         <div id="drawArea" style="width:100%; height:100%; border:1px solid gray">
         </div>
+        <div>Cost</div><div id="cost"></div>
+        <div>Revenue</div><div id="score"></div>
     </div>
 </div>
 
