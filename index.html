@@ -177,6 +177,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
                 //.transition()//.duration(50)
                 .attr("cx", thisobj.posX)
                 .attr("cy", thisobj.posY)
+                .attr("r" , thisobj.radius)
             ;
  
         }
@@ -238,14 +239,21 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     }
 
     function DeleteBall(id){
-        //console.log("DeleteBall"+id);
-        ScoreGoal(0,0);
-                    
+        console.log("DeleteBall:"+id);
+        ScoreGoal(0,0);             
         
-        d3.selectAll('.ball').remove();
-        balls.splice(0, 1);
-        balls.push(new Ball(svg, 10, 10, 'n2', 'green', Math.PI / 3, 20));
+        d3.selectAll('#'+id).remove();
+        balls.splice(FindBallById(id), 1);
+        AddBall(10,10);
         balls[0].Draw();
+    }
+
+    function FindBallById(id){
+        for (var i = 0; i < balls.length; ++i) {
+             if (balls[i].data == id){
+                return i;
+             }
+        }     
     }
 
     function AddPaddle(containerId){
@@ -255,6 +263,10 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         console.log("Add Paddle:"+svg.id);
     }
 
+    function AddBall(x,y){
+        balls.push(new Ball(svg, x, y, 'b'+ balls_id, 'green', Math.PI / 3, 10));
+        balls_id ++;
+    }
 
     function ProcessBounce(ball, paddle){
         if(typeof balls[ball] === 'undefined') {
@@ -267,13 +279,32 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         paddle = paddles[paddle];
         //console.log("Ball:" + (ball.posY+ball.radius) + "  Paddle:"+paddle.posY);
 
-        if (((ball.posY < paddle.posY && (ball.posY+ball.radius) >= paddle.posY ) ||
-            (ball.posY > paddle.posY+10 && (ball.posY-ball.radius) <= (paddle.posY + 10))) 
-            && ball.posX >= paddle.posX && (ball.posX) < (paddle.posX + paddle.width)) {
-            //|| ((ball.posY-ball.radius) < (paddle.posY + 20)
-            ball.vy = -ball.vy;
-            //ball.Draw();
-            console.log("Impact:" + ball.posY);
+        if (ball.posX >= paddle.posX && (ball.posX) < (paddle.posX + paddle.width)){
+            if (ball.posY < paddle.posY && (ball.posY+ball.radius) >= paddle.posY ) {
+                ball.posY -= ball.posY+ball.radius - paddle.posY;
+                ball.posY -= 5
+                ball.radius += 5; 
+                ball.vy = -ball.vy * 0.8;
+
+                ball.Draw();
+                console.log("Impact top:" + ball.posY);
+
+               
+            }
+            // else if (ball.posY > paddle.posY+10 && (ball.posY-ball.radius) <= (paddle.posY + 10)){
+            // //|| ((ball.posY-ball.radius) < (paddle.posY + 20)
+            //     ball.posY += paddle.posY - ball.posY-ball.radius + 2;
+
+            //     ball.posY += 5
+            //     ball.radius += 5; 
+            //     ball.vy = -ball.vy * 0.8;
+            //     ball.Draw();
+            //     console.log("Impact bottom:" + ball.posY);
+            // }
+                
+            
+          
+         
         }
 
         
@@ -283,6 +314,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         ball = balls[ball];
         goal = goals[goal];
         if (ball.posX + ball.radius +10 >= goal.posX && ball.posY > goal.posY && ball.posY < (goal.posY + goal.height)  ){
+            ball.radius = 10;
             score += 20;
             console.log ("      Goal!!! Score=" + score );
         }    
@@ -303,9 +335,20 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     }
 
     var balls = []; // global array representing balls
+    var balls_id = 1;
     var paddles = []; // global array representing paddles
     var goals = [];
     var score = 0;
+    var t = d3.timer(function () {
+        for (var i = 0; i < balls.length; ++i) {
+            var r = balls[i].Move();
+            for (var j = 0 ; j < paddles.length; ++j) {
+                ProcessBounce(i, j);
+            }
+                                 
+        }
+    }
+        , 500);
    // var color = d3.scale.category20();
 
     //courtsey thanks to several internet sites for formulas
@@ -384,7 +427,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         ;
 
       //  balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
-        balls.push(new Ball(svg, 10, 10, 'n1', 'green', Math.PI / 3, 20));
+        balls.push(new Ball(svg, 10, 10, 'b0', 'green', Math.PI / 3, 10));
+        //AddBall(10,10);
         goals.push(new Goal(svg, svg.attr('width') - 3 , 20, 'g1', 'red', 50));
         paddles.push(new Paddle(svg, 90, 200, 'p1', 'green', 50));
         paddles.push(new Paddle(svg, 280, 200, 'p2', 'red', 50));
@@ -405,23 +449,22 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     function StartStopGame() {
         console.log("StartStop:" + startStopFlag);
         if (startStopFlag == null) {
-            d3.timer(function () {
-                for (var i = 0; i < balls.length; ++i) {
-                    var r = balls[i].Move();
-                    for (var j = 0 ; j < paddles.length; ++j) {
-                        ProcessBounce(i, j);
-                    }
-                                         
-                }
-                if (startStopFlag == null)
-                    return true;
-                else
-                    return false;
-            }, 500);
+            
+            t.restart(function () {
+        for (var i = 0; i < balls.length; ++i) {
+            var r = balls[i].Move();
+            for (var j = 0 ; j < paddles.length; ++j) {
+                ProcessBounce(i, j);
+            }
+                                 
+        }
+    }
+        , 500);
             startStopFlag = 1;
             document.getElementById('startStop').innerHTML = 'Stop';
         }
         else {
+            t.stop();
             startStopFlag = null;
             document.getElementById('startStop').innerHTML = 'Start';
         }
@@ -471,6 +514,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         <div id="menuTop" >
             <a id="startStop" href="javascript:StartStopGame()">Start</a> | 
             <a id="AddPaddle" href="javascript:AddPaddle('drawArea')">Add Paddle</a> |
+             <a id="AddBall" href="javascript:AddBall(10,10)">Add Ball</a> |
             Speed :
             <select id='speed' onchange="OnSpeedChange()">
                 <option value="1" selected="selected">Slow</option>
