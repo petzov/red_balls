@@ -143,7 +143,10 @@
 
     function AddBall(){
         x = spout[0].posX+15;
-        balls.push(new Ball(svg, x, 10, 'b'+ balls_id, 'green', Math.PI / 3, 10));
+        balls.push(new Ball(svg, x, 10, 'b'+ balls_id, 'green', Math.PI / 3, 5));
         balls_id ++;
         AddCost(1);
     }
+
+
+

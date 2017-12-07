@@ -26,7 +26,9 @@
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
-                    .on("end", dragended));
+                    .on("end", dragended))
+                .append("svg:title")
+                    .text(function(d, i) { return "My color is " })
                 ;
             // paddle
             //     //.transition()//.duration(50)

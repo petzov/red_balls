@@ -64,7 +64,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
                     ball.radius += 5; 
                     bounces[ball["id"]][paddle_id] = 1;
                 }
-                ball.vy = - ball.vy ;
+                ball.vy = - ball.vy  ;
                 ball.Draw();
                 AddCost(5);               
             }
@@ -119,7 +119,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         inno = 1;
         moving_goal = d3.interval(function (){
             GoalAutoMove();
-        }, 1000);
+        }, 4000);
         GoalSetSize(20);
     }
     function Innovation(){
@@ -128,6 +128,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     function randomInt(min,max){
         return Math.floor(Math.random()*(max-min+1)+min);
     }
+
 
     function Initialize(containerId) {
         var height = document.getElementById(containerId).clientHeight;
@@ -149,26 +150,31 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         //.attr("transform", "translate(" + 1 + "," + 1 + ")")
         ;
 
-      //  balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
+
+        return svg;
+    }
+
+    function AddSuff(){
+
+        //  balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
         spout.push(new Spout(svg, 30, 0, 's0', 'red'));
-        balls.push(new Ball(svg, spout[0].posX+15, 10, 'b0', 'green', Math.PI / 3, 10));
-        AddCost(1);
+       // balls.push(new Ball(svg, spout[0].posX+15, 10, 'b0', 'green', Math.PI / 3, 5));
+        AddBall();
         
         goals.push(new Goal(svg, svg.attr('width') - 3 , 60, 'g1', 'red', 50));
        // goals.push(new Goal(svg, svg.attr('width') - 3 , 120, 'g1', 'red', 50));
-        paddles.push(new Paddle(svg, 90, 200, 'p1', 'green', 50));
-        paddles.push(new Paddle(svg, 280, 200, 'p2', 'red', 50));
+        paddles.push(new Paddle(svg, 90, 80, 'p1', 'green', 50));
+        paddles.push(new Paddle(svg, 240, 150, 'p2', 'green', 50));
+        paddles.push(new Paddle(svg, 480, 200, 'p3', 'green', 50));
+        paddles.push(new Paddle(svg, 770, 220, 'p4', 'green', 50));
+        
         
 
-        for (var i = 0; i < balls.length; ++i) {
-            balls[i].Draw();
-        }
 
         for (var i = 0; i < paddles.length; ++i) {
             paddles[i].Draw();
         }
         Production();
-        return svg;
     }
 
     var startStopFlag = null;
@@ -230,7 +236,9 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
 <script>
     var svg = Initialize('drawArea');
+    AddSuff();
     StartStopGame();
+
 </script>
 
 </body>
