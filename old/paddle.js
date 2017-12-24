@@ -5,7 +5,7 @@
         this.width = width; // radius and weight same
         this.svg = svg; // parent SVG
         this.id = id; // id of paddle
-
+        this.ind = id.replace('p','');
         this.data = [this.id]; // allow us to use d3.enter()
         var thisobj = this; // i like to use thisobj instead of this. this many times not reliable particularly handling evnet
 
@@ -42,7 +42,13 @@
             }
 
             function dragged(d) {
-              d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
+
+              d3.select(this)
+              .attr("x", d.x = 3 * d3.event.y + thisobj.ind * 20  )
+              .attr("y", d.y = d3.event.y)
+              .attr('width' , (svg.attr('height') - d3.event.y)/3)
+              .attr('height' , ((svg.attr('height') - d3.event.y)/4))
+              ;
               thisobj.posX = d3.event.x;
               thisobj.posY = d3.event.y;
             }

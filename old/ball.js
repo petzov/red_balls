@@ -67,6 +67,17 @@
             thisobj.Draw();
         }
 
+        this.MoveP2P= function(pad1){
+            var svg = thisobj.svg;
+            paddle1 = paddles[pad1];
+            paddle2 = paddles[pad1+1];
+            var distance = paddle2.posX - (paddle1.posX + paddle1.width);
+            var middleX = paddle1.posX + paddle1.width + distance/2;
+            console.log("Ball:"+thisobj.id+" Paddle1"+paddle1.id);
+            //var distance = (absx * absx) + (absy * absy);
+            //distance = Math.sqrt(distance);
+        }
+
         this.Move = function () {
             var svg = thisobj.svg;
 
