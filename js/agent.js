@@ -17,6 +17,7 @@
             var circle1 = agent.enter()
                 .append("circle")
                 .attr("id" , thisobj.id) 
+                .attr("index" , 100)
                 .attr("class" , "ball")
                 //.attr("r" , thisobj.radius)
                 //.attr("weight" , thisobj.weight)
@@ -68,7 +69,6 @@
         }
             
         //thisobj.Draw();
-
 
     }
  
