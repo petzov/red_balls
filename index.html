@@ -15,11 +15,9 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
     <script src="http://d3js.org/d3.v4.min.js"></script>
-    <script src="ball.js"></script>
-    <script src="goal.js"></script>
-    <script src="paddle.js"></script>
-    <script src="spout.js"></script>
+    <script src="js/agent.js"></script>
     <script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script>
+    <script src="js/lines.js"></script>
      <!-- <script src="https://d3js.org/d3-drag.v1.min.js"></script> -->
      <style>
 
@@ -33,102 +31,30 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 <body>
 
 <script>
-    function AddCost(x){
-        cost +=x;
-        $("#cost").html(cost.toFixed(0));
-        $("#profit").html((score-cost).toFixed(0));
-    }
- 
-    function ProcessBounce(ball, paddle){
-        if(typeof balls[ball] === 'undefined') {
-            return;
-        }
-        else {
-            ball = balls[ball];
-
-            if (typeof bounces[ball["id"]] === "undefined"){
-                //console.log("Defining bounces id:"+ball_id );
-                bounces[ball["id"]] = {};
-            };
-
-             
-        }
-        paddle_id = paddle;
-        paddle = paddles[paddle];
-        
-        if (ball.posX >= paddle.posX && (ball.posX) < (paddle.posX + paddle.width)){
-            if (ball.posY < paddle.posY && (ball.posY+ball.radius) >= paddle.posY ) {
-                ball.posY -= ball.posY+ball.radius - paddle.posY;
-                if (typeof bounces[ball["id"]][paddle_id] === "undefined"){
-                    ball.posY -= 5
-                    ball.radius += 5; 
-                    bounces[ball["id"]][paddle_id] = 1;
-                }
-                ball.vy = - ball.vy  ;
-                ball.Draw();
-                //ball.MoveP2P(paddle_id);
-                AddCost(5);               
-            }
-            // else if (ball.posY > paddle.posY+10 && (ball.posY-ball.radius) <= (paddle.posY + 10)){
-            // //|| ((ball.posY-ball.radius) < (paddle.posY + 20)
-            //     ball.posY += paddle.posY - ball.posY-ball.radius + 2;
-
-            //     ball.posY += 5
-            //     ball.radius += 5; 
-            //     ball.vy = -ball.vy * 0.8;
-            //     ball.Draw();
-            //     console.log("Impact bottom:" + ball.posY);
-            // }                        
-         
-        }
-        
-    }
 
 
-    var balls = []; // global array representing balls
-    var balls_id = 1;
-    var paddles = []; // global array representing paddles
-    var goals = [];
-    var spout = [];
-    var score = 0;
-    var cost = 0;
-    var inno = 0;
-    var bounces = {};
+    var agents = []; // global array representing balls
+    var boxes = [];
+    var price = 250;
+
     var t = d3.timer(function () {
        // goals[0].Move(20);
-        for (var i = 0; i < balls.length; ++i) {
-            var r = balls[i].Move();
-            for (var j = 0 ; j < paddles.length; ++j) {
-                ProcessBounce(i, j);
-            }                                 
-        }
+        // for (var i = 0; i < agents.length; ++i) {
+        //     var r = balls[i].Move();
+        //     for (var j = 0 ; j < paddles.length; ++j) {
+        //         ProcessBounce(i, j);
+        //     }                                 
+        // }
     }
         , 500);
 
     var moving_goal = d3.interval(function (){
-        GoalAutoMove();
+ 
     }, 1000);
 
    // var color = d3.scale.category20();
 
-    function Production(){
-        inno = 0;
-        moving_goal.stop();
-        GoalSetSize(80);
-    }
-    function StartInnovation(){
-        inno = 1;
-        moving_goal = d3.interval(function (){
-            GoalAutoMove();
-        }, 4000);
-        GoalSetSize(20);
-    }
-    function Innovation(){
-        GoalMove(10);
-    }
-    function randomInt(min,max){
-        return Math.floor(Math.random()*(max-min+1)+min);
-    }
+
 
 
     function Initialize(containerId) {
@@ -158,25 +84,53 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     function AddSuff(){
 
         //  balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
-        spout.push(new Spout(svg, 30, 0, 's0', 'red'));
+
+
+        //quantity(svg,60);
+        agents.push(new Agent(svg, 30, 100, 's0', 'red', 50));
+        agents.push(new Agent(svg, 80, 150, 's0', 'red', 70));
+
+
+
+
+
+
+        //boxes.push(new Box(svg, 80, 150, 's0', 'red', 70));
+
        // balls.push(new Ball(svg, spout[0].posX+15, 10, 'b0', 'green', Math.PI / 3, 5));
         //AddBall();
         
-        goals.push(new Goal(svg, svg.attr('width') - 3 , 60, 'g1', 'red', 50));
-       // goals.push(new Goal(svg, svg.attr('width') - 3 , 120, 'g1', 'red', 50));
-        paddles.push(new Paddle(svg, 790, 260, 'p1', 'green', 20));
-        paddles.push(new Paddle(svg, 810, 260, 'p2', 'green', 30));
-        paddles.push(new Paddle(svg, 830, 260, 'p3', 'green', 50));
-        paddles.push(new Paddle(svg, 850, 260, 'p4', 'green', 20));
+
         
         
 
 
-        for (var i = 0; i < paddles.length; ++i) {
-            paddles[i].Draw();
+        for (var i = 0; i < agents.length; ++i) {
+            agents[i].Draw();
         }
-        Production();
+
+
+
+        hor_line(svg,"benefits",60, "above");
+        hor_line(svg,"effort",80, "bellow");
+        quantity(svg,60);
     }
+
+
+   d3.selection.prototype.moveToFront = function() {  
+      return this.each(function(){
+        this.parentNode.appendChild(this);
+      });
+    };
+    d3.selection.prototype.moveToBack = function() {  
+        return this.each(function() { 
+            var firstChild = this.parentNode.firstChild; 
+            if (firstChild) { 
+                this.parentNode.insertBefore(this, firstChild); 
+            } 
+        });
+    };
+
 
     var startStopFlag = null;
     function StartStopGame() {
@@ -184,14 +138,14 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         if (startStopFlag == null) {
             
             t.restart(function () {
-              // GoalAutoMove();
-            for (var i = 0; i < balls.length; ++i) {
-                var r = balls[i].Move();
-                for (var j = 0 ; j < paddles.length; ++j) {
-                    ProcessBounce(i, j);
-                }
+                var i=0;
+            // for (var i = 0; i < balls.length; ++i) {
+            //     var r = balls[i].Move();
+            //     for (var j = 0 ; j < paddles.length; ++j) {
+            //         ProcessBounce(i, j);
+            //     }
                                  
-        }
+            // }
     }
         , 500);
             startStopFlag = 1;
@@ -199,7 +153,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         }
         else {
             t.stop();
-            moving_goal.stop();
+            // moving_goal.stop();
             startStopFlag = null;
             document.getElementById('startStop').innerHTML = 'Start';
         }
@@ -207,7 +161,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     // I always like to handle ESC key
     d3.select('body')
             .on('keydown', function () {
-                if (balls.length == 0)
+                if (agents.length == 0)
                     return;
                 console.log(d3.event);
                 if (d3.event.keyCode == 27) { // if ESC key - toggle start stop
@@ -222,10 +176,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     <div id="drawAreaOuter" style="width:100%; height:100%;  ">
         <div id="menuTop" >
             <a id="startStop" href="javascript:StartStopGame()">Start</a> | 
-            <a id="AddPaddle" href="javascript:AddPaddle('drawArea')">Add Paddle</a> |
-            <a id="AddBall" href="javascript:AddBall(10,10)">Add Ball</a> |
-            <a id="Production" href="javascript:Production()">Production</a> |
-            <a id="Innovation" href="javascript:StartInnovation()">Innovation</a> |
+
         </div>
         <div id="drawArea" style="width:100%; height:100%; border:1px solid gray">
         </div>
