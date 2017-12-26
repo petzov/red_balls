@@ -35,7 +35,13 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
     var agents = []; // global array representing balls
     var boxes = [];
-    var price = 250;
+    var positions = {};
+
+    positions["benefits"] = 60;
+    positions["effort"] = 80;
+    positions["price"] = 150;
+    positions["quantity"] = 80;
+
 
     var t = d3.timer(function () {
        // goals[0].Move(20);
@@ -105,32 +111,26 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         
 
 
-        for (var i = 0; i < agents.length; ++i) {
+        for (var i = 0; i < 10; ++i) {
+            agents.push(new Agent(svg, randomInt(10,800), randomInt(30,200), 's0', 'red', 50));
+
             agents[i].Draw();
         }
 
 
 
-        hor_line(svg,"benefits",60, "above");
-        hor_line(svg,"effort",80, "bellow");
-        quantity(svg,60);
+        hor_line(svg,"benefits", "above");
+        hor_line(svg,"effort", "bellow");
+        hor_line(svg,"price", "bellow");
+
+        quantity(svg,"quantity");
     }
 
 
-   d3.selection.prototype.moveToFront = function() {  
-      return this.each(function(){
-        this.parentNode.appendChild(this);
-      });
-    };
-    d3.selection.prototype.moveToBack = function() {  
-        return this.each(function() { 
-            var firstChild = this.parentNode.firstChild; 
-            if (firstChild) { 
-                this.parentNode.insertBefore(this, firstChild); 
-            } 
-        });
-    };
-
+  
+    function randomInt(min,max){
+        return Math.floor(Math.random()*(max-min+1)+min);
+    }
 
     var startStopFlag = null;
     function StartStopGame() {

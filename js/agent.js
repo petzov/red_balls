@@ -33,7 +33,7 @@
                 .attr("x1", thisobj.posX)     // x position of the first end of the line
                 .attr("y1", thisobj.posY+this.width)      // y position of the first end of the line
                 .attr("x2", thisobj.posX)     // x position of the second end of the line
-                .attr("y2", price) 
+                .attr("y2", 300) 
                 // .call(d3.drag()
                 //     .on("start", dragstarted)
                 //     .on("drag", dragged)
