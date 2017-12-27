@@ -25,6 +25,14 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
       stroke: #000;
       stroke-width: 2px;
     }
+    .data{
+        display: inline-table;
+        border: 1px solid #8f8f92;
+        text-align: center;
+        font-family: sans-serif;
+        margin: -1px;
+        padding: 0 8px 0 8px;
+    }
 
     </style>
 </head>
@@ -32,10 +40,13 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
 <script>
 
-
+    var numberAgents = 50;
+    var MOC = 600; // Minimal optimal cost
     var agents = []; // global array representing balls
     var boxes = [];
     var positions = {};
+    var startCost = 100;
+    var cutCost = 1;
 
     positions["benefits"] = 60;
     positions["effort"] = 80;
@@ -89,30 +100,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
     function AddSuff(){
 
-        //  balls.push(new Ball(svg, 501, 101, 'n1', 'red', Math.PI / 6));
-
-
-        //quantity(svg,60);
-        agents.push(new Agent(svg, 30, 100, 's0', 'red', 50));
-        agents.push(new Agent(svg, 80, 150, 's0', 'red', 70));
-
-
-
-
-
-
-        //boxes.push(new Box(svg, 80, 150, 's0', 'red', 70));
-
-       // balls.push(new Ball(svg, spout[0].posX+15, 10, 'b0', 'green', Math.PI / 3, 5));
-        //AddBall();
-        
-
-        
-        
-
-
-        for (var i = 0; i < 10; ++i) {
-            agents.push(new Agent(svg, randomInt(10,800), randomInt(30,200), 's0', 'red', 50));
+        for (var i = 0; i < numberAgents; ++i) {      
+            agents.push(new Agent(svg, randomInt(10,880), randomInt(10,280), 's0', 'red', 50));
 
             agents[i].Draw();
         }
@@ -124,12 +113,26 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         hor_line(svg,"price", "bellow");
 
         quantity(svg,"quantity");
+
+        DrawMoc();
     }
 
 
   
     function randomInt(min,max){
         return Math.floor(Math.random()*(max-min+1)+min);
+    }
+
+    function CutCost(){
+        startCost = startCost / 2;
+        calculate_value();
+        DrawMoc();
+    }
+
+    function moveMoc(x){
+        MOC += x;
+        calculate_value();
+        DrawMoc();
     }
 
     var startStopFlag = null;
@@ -176,13 +179,19 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     <div id="drawAreaOuter" style="width:100%; height:100%;  ">
         <div id="menuTop" >
             <a id="startStop" href="javascript:StartStopGame()">Start</a> | 
-
+             <a id="cutCost" href="javascript:CutCost()">Cut Cost</a>| 
+             <a id="moveMoc" href="javascript:moveMoc(-100)">&lt;&lt;</a> MOC
+             <a id="moveMoc" href="javascript:moveMoc(100)">&gt;&gt;</a>
         </div>
         <div id="drawArea" style="width:100%; height:100%; border:1px solid gray">
         </div>
-        <div>Cost</div><div id="cost"></div>
-        <div>Revenue</div><div id="score"></div>
-        <div id=profit_label>Profit</div><div id="profit"></div>
+        <div id="dataArea">
+            <div class="data">Value<div id="value"></div></div> 
+            <div class="data">Customers [%]<div id="customers"></div></div>
+            <div class="data">Cost<div id="cost"></div></div>
+            <div class="data">Revenue<div id="revenue"></div></div>
+            <div class="data">Profit<div id="profit"></div></div>
+        </div>
     </div>
 </div>
 

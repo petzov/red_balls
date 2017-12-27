@@ -1,3 +1,5 @@
+var mask_color = "#d8d7d7"
+var opacity = 0.8;
 function quantity(svg,id){
 	
 	var quant = svg.append("g"); 
@@ -9,8 +11,20 @@ function quantity(svg,id){
         .attr('y' , 0)
         .attr('width' , svg.attr('width') - positions[id])
         .attr( 'height' , svg.attr('height'))
-        .style("fill",  "grey")
+        .style("fill", mask_color)
+        .style("opacity", opacity)
         ;
+
+    var label =  quant.append("text")   
+    	.attr("id", id + "_label")
+    	.attr("x", - svg.attr('height') + 10)
+	    .attr("y", positions[id] + 15)
+	    .text(id)
+	    .attr("font-family", "sans-serif")
+	    .attr("font-size", "15px")
+	    .attr("transform", "rotate(-90)")
+	    .attr("fill", "black");    
+
 
     var line = quant.append("line")          // attach a line
     			.attr("id" , "quant_line")
@@ -62,29 +76,42 @@ function hor_line(svg,id,mask){ // mask = [no, above, bellow]
 	   if (mask == "above") {
     	var y_mask = 0;
     	var mask_height = positions[id] - 1;
+    	var y_label = mask_height - 10;
  
     }else if (mask == "bellow") {
     	var y_mask = positions[id] + 1;
     	var mask_height = svg.attr('height') - positions[id];
+    	var y_label = y_mask + 15;
 
     }
 
 	var hor_mask = h_line.append("rect")
-    	.attr("id" , id+"_mask")
+    	.attr("id" , id + "_mask")
         .attr('x' , 0)
         .attr('y' , y_mask)
-        .attr('width' , svg.attr('width'))
-        .attr( 'height' , mask_height)
-        .style("fill",  "grey")
+        .attr('width', svg.attr('width'))
+        .attr( 'height', mask_height)
+        .style("fill", mask_color)
+        .style("opacity", opacity)
         ;   
+
+    var label =  h_line.append("text")   
+    	 .attr("id", id + "_label")
+    	 .attr("x", 10)
+	     .attr("y", y_label)
+	     .text(id)
+	     .attr("font-family", "sans-serif")
+	     .attr("font-size", "15px")
+	     .attr("fill", "black");
 
 	var line = h_line.append("line")          // attach a line
 				.attr("id" , id+"_line")
+				.attr("class", "h_line")
                 .style("stroke", "black")  // colour the line
                 .style("stroke-width","3")
                 .attr("x1", 0)     // x position of the first end of the line
                 .attr("y1", positions[id])      // y position of the first end of the line
-                .attr("x2", svg.attr('width'))     // x position of the second end of the line
+                .attr("x2", positions["quantity"])     // x position of the second end of the line
                 .attr("y2", positions[id]) 
                 .call(d3.drag()
                     .on("start", dragstarted)
@@ -98,23 +125,38 @@ function hor_line(svg,id,mask){ // mask = [no, above, bellow]
     }
 
     function dragged(d) {
+    	// Increase the effort with more benefits
+      	// if (id == "benefits"){
+      	// 	var origPos = positions[id]
+  	    //   	var delta = positions["effort"] - (positions[id] - d3.event.y );
+  	  		// d3.select("#effort_line")
+  	  		// .attr("y1",  delta ).attr("y2",  delta );	
+      	// }
+
     	positions[id]  = d3.event.y;
-    	
-      	
-      	
+    	     	
   	    if (mask == "above") {
   	    	if (d3.event.y <= 5){
 				positions[id] = 5;
 			}
+			if (id == "benefits"){
+	    		min_level = svg.attr('height') - positions["effort"];
+	    	}
+	    	if (d3.event.y > svg.attr('height') - min_level - 5){
+	      		positions[id] = svg.attr('height') - min_level - 5;
+
+	      	}
 
 			d3.select("#"+id+"_mask").attr('height' , positions[id] );
 	 
 	    } 
 	    else if (mask == "bellow") {
-	    	var min_level = 50;
+	    	var min_level = 20;
 	    	if (id == "effort"){
 	    		min_level = svg.attr('height') - positions["price"] + 10;
 	    	}
+
+
 	      	if (d3.event.y > svg.attr('height') - min_level){
 	      		positions[id] = svg.attr('height') - min_level;
 
@@ -141,33 +183,101 @@ function update_lines(id){
 	if (id == "benefits"){
 		d3.select("#quant_line")
       		.attr("y1", positions[id] );
+      	d3.select("#benefits_label")
+      		.attr("y", positions[id] - 10);	
+
+	} else {
+		d3.select("#"+id+"_label")
+      		.attr("y", positions[id] + 15);
 	}
 	if (id == "price"){
-		if (positions[id] <= positions["effort"]){
+		if (positions[id]-10 <= positions["effort"]){
 			positions["effort"] = positions[id] - 10;
 			d3.select("#effort_line")
       			.attr("y1", positions[id]-10 ).attr("y2", positions[id]-10 );
       		d3.select("#effort_mask")	
       			.attr('y' , positions[id] - 10 )
       			.attr('height' , svg.attr('height') - positions[id]+10);
+      		d3.select("#effort_label")
+      		.attr("y", positions[id] + 5);	
 		}
 
 	}
+	if (id == "quantity"){
+		d3.select("#"+id+"_label")
+			.attr("y", positions[id] + 15)
+		d3.selectAll(".h_line")
+			.attr("x2", positions[id])
+	}
 
 	calculate_value();
+	
 }
 
+function MarginalCost(quantValue){
+	if (quantValue < MOC){
+		var marginal_cost = (MOC - quantValue ) / MOC;
+	}
+	else {
+		var marginal_cost = (quantValue - MOC ) / (svg.attr("width") - MOC);
+	}
+	return marginal_cost * startCost + startCost/3;
+}
+
+function fixedCost(){
+	if (positions["benefits"] < 50){
+		fc = 50 - positions["benefits"];
+	}else{
+		fc = 1;
+	}
+
+	return fc*fc ;
+	
+}
+
+function DrawMoc(){
+	var lineData = [];
+	for (var i = 0; i <= svg.attr("width"); i+=100) {
+		lineData.push({"x":i,"y":(svg.attr("height") - MarginalCost(i))}); //*(svg.attr("height") - positions["benefits"])
+	}
+
+	var line = d3.line()
+	    .x(function(d, i) { return d.x; }) // set the x values for the line generator
+	    .y(function(d) { return d.y; }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX) // apply smoothing to the line
+	  
+	svg.append("path")
+	    .datum(lineData) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line)
+	    .attr("stroke","red")
+	    ;  
+
+}
 
 function calculate_value(){
 	var value = 0;
+	var customers = 0;
 	var revenue = 0;
+	var cost = 0;
+	var profit = 0;
+	var marginal_cost = MarginalCost(positions["quantity"]);
+
 	for (var i = 0; i < agents.length; ++i) {
 			if ( ( agents[i].posY < positions["effort"]) && (agents[i].posY > positions["benefits"] ) && 
 				(agents[i].posX < positions["quantity"] )){
 				value += positions["effort"] - agents[i].posY ;
 				revenue += svg.attr('height') - positions["price"];
+				cost += marginal_cost;
+				customers ++;
 			}
-             
         }
-    console.log("Value="+value+", Revenue="+revenue) ;   
+    cost += fixedCost();
+        
+    $("#value").text(value.toFixed(0));
+    $("#revenue").text(revenue.toFixed(0));  
+    $("#profit").text(revenue.toFixed(0) - cost.toFixed(0));  
+    $("#cost").text(cost.toFixed(0));
+    $("#customers").text((100*customers/numberAgents).toFixed(0));
+    //console.log("Value="+value+", Revenue="+revenue + ", MC="+marginal_cost) ;   
 }

@@ -2,7 +2,7 @@
         this.posX = x; // cx
         this.posY = y; // cy
         this.color = color;
-        this.width = 10; // radius and weight same
+        this.width = 5; // radius and weight same
         this.svg = svg; // parent SVG
         this.id = id; // id of paddle
         this.ind = id.replace('p','');
@@ -71,7 +71,8 @@
         //thisobj.Draw();
 
     }
- 
+
+
 
     function AddAgent(containerId){
       //  var svg = d3.select("#drawArea_canvas");
