@@ -18,13 +18,19 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     <script src="js/agent.js"></script>
     <script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script>
     <script src="js/lines.js"></script>
+    <script src="js/listAgents.js"></script>
      <!-- <script src="https://d3js.org/d3-drag.v1.min.js"></script> -->
      <style>
 
     .active {
-      stroke: #000;
-      stroke-width: 2px;
+      stroke: #000 !important;
+      stroke-width: 4px !important;
     }
+    .h_line {
+      stroke: #000;
+      stroke-width: 3px;
+    }
+
     .data{
         display: inline-table;
         border: 1px solid #8f8f92;
@@ -33,6 +39,10 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         margin: -1px;
         padding: 0 8px 0 8px;
     }
+    .hover{
+       stroke: red;
+      stroke-width: 3px; 
+    }
 
     </style>
 </head>
@@ -40,37 +50,20 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
 <script>
 
-    var numberAgents = 50;
+    var numberAgents = 30;  // 1 - 100
     var MOC = 600; // Minimal optimal cost
     var agents = []; // global array representing balls
     var boxes = [];
     var positions = {};
     var startCost = 100;
     var cutCost = 1;
+    var linkPriceEffort = 10;  // 10 = no link
 
     positions["benefits"] = 60;
-    positions["effort"] = 80;
     positions["price"] = 150;
+    positions["effort"] = positions["price"] - linkPriceEffort;
     positions["quantity"] = 80;
-
-
-    var t = d3.timer(function () {
-       // goals[0].Move(20);
-        // for (var i = 0; i < agents.length; ++i) {
-        //     var r = balls[i].Move();
-        //     for (var j = 0 ; j < paddles.length; ++j) {
-        //         ProcessBounce(i, j);
-        //     }                                 
-        // }
-    }
-        , 500);
-
-    var moving_goal = d3.interval(function (){
- 
-    }, 1000);
-
-   // var color = d3.scale.category20();
-
+    var sortAgents = [];
 
 
 
@@ -99,25 +92,46 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     }
 
     function AddSuff(){
+        var xOffset = Math.round((svg.attr("width") - 30)/numberAgents); // );
+        var x = 30;  // offset from the sides
+        
+        // for (var i = 0; i < numberAgents; ++i) { 
+        //     agents.push(new Agent(svg, x, Math.round(randomInt(10,280)), 's0', 'red', 50));
+        //     agents[i].Draw();
+        //     x += xOffset; 
+        // }
 
-        for (var i = 0; i < numberAgents; ++i) {      
-            agents.push(new Agent(svg, randomInt(10,880), randomInt(10,280), 's0', 'red', 50));
-
+        for (var i = 0; i < numberAgents; ++i) {
+            agents.push(new Agent(svg, x, parseInt(listAgents[i].y), "s"+i, 'red', 50));
             agents[i].Draw();
+            x += xOffset; 
+            quant_x = ('0000'+i).substring((""+i).length);
+            sortAgents.push(listAgents[i].y+quant_x);
         }
 
-
+        sortAgents.sort((a, b) => (b - a));  // sorts the agents by Y
 
         hor_line(svg,"benefits", "above");
         hor_line(svg,"effort", "bellow");
         hor_line(svg,"price", "bellow");
 
         quantity(svg,"quantity");
-
+        calculate_value();
         DrawMoc();
+      //  costPerAgent();
     }
 
-
+    function costPerAgent(){
+        for (var i = 0; i < sortAgents.length; ++i) {
+            agentY = parseInt(sortAgents[i].slice(0,-4)) ;
+            var indAgent = parseInt(sortAgents[i].slice(-4));
+            var fc = fixedCost(agentY)/(i+1);
+            
+            var mc = MarginalCost(listAgents[indAgent].x );
+            console.log("x="+indAgent+",y="+(300-agentY)+" Fc = "+fc+",mc="+mc+" Tot:="+(fc+mc));
+            $("#s"+indAgent+"_label").text((fc+mc).toFixed(0));
+        }    
+    }
   
     function randomInt(min,max){
         return Math.floor(Math.random()*(max-min+1)+min);
@@ -135,52 +149,21 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         DrawMoc();
     }
 
-    var startStopFlag = null;
-    function StartStopGame() {
-        console.log("StartStop:" + startStopFlag);
-        if (startStopFlag == null) {
-            
-            t.restart(function () {
-                var i=0;
-            // for (var i = 0; i < balls.length; ++i) {
-            //     var r = balls[i].Move();
-            //     for (var j = 0 ; j < paddles.length; ++j) {
-            //         ProcessBounce(i, j);
-            //     }
-                                 
-            // }
-    }
-        , 500);
-            startStopFlag = 1;
-            document.getElementById('startStop').innerHTML = 'Stop';
-        }
-        else {
-            t.stop();
-            // moving_goal.stop();
-            startStopFlag = null;
-            document.getElementById('startStop').innerHTML = 'Start';
-        }
-    }
-    // I always like to handle ESC key
-    d3.select('body')
-            .on('keydown', function () {
-                if (agents.length == 0)
-                    return;
-                console.log(d3.event);
-                if (d3.event.keyCode == 27) { // if ESC key - toggle start stop
-                    StartStopGame();
-                }
-            });
-
+    $( ".h_line" ).hover(
+      function() {
+        $( this ).addClass( "hover" );
+      }, function() {
+        $( this ).removeClass( "hover" );
+      }
+    );
 
 
 </script>
 <div id="mainDiv" style="width:900px; height:300px">
     <div id="drawAreaOuter" style="width:100%; height:100%;  ">
-        <div id="menuTop" >
-            <a id="startStop" href="javascript:StartStopGame()">Start</a> | 
+        <div id="menuTop" > 
              <a id="cutCost" href="javascript:CutCost()">Cut Cost</a>| 
-             <a id="moveMoc" href="javascript:moveMoc(-100)">&lt;&lt;</a> MOC
+             <a id="moveMoc" href="javascript:moveMoc(-100)">&lt;&lt;</a> LRAC
              <a id="moveMoc" href="javascript:moveMoc(100)">&gt;&gt;</a>
         </div>
         <div id="drawArea" style="width:100%; height:100%; border:1px solid gray">
@@ -191,6 +174,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
             <div class="data">Cost<div id="cost"></div></div>
             <div class="data">Revenue<div id="revenue"></div></div>
             <div class="data">Profit<div id="profit"></div></div>
+            <div class="data">Markt*Profit<div id="valCost"></div></div>
         </div>
     </div>
 </div>
@@ -198,7 +182,6 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 <script>
     var svg = Initialize('drawArea');
     AddSuff();
-    StartStopGame();
 
 </script>
 

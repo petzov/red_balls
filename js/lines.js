@@ -34,11 +34,13 @@ function quantity(svg,id){
                 .attr("y1", positions["benefits"])      // y position of the first end of the line
                 .attr("x2", positions[id])     // x position of the second end of the line
                 .attr("y2", 300) 
+                .on("mouseover", dragstarted)
+                .on("mouseout", dragended)
                 .call(d3.drag()
-                    .on("start", dragstarted)
+                   // .on("start", dragstarted)
                     .on("drag", dragged)
-                    .on("end", dragended))
-                ;
+                   // .on("end", dragended)
+                   )
 
 
     function dragstarted(d) {
@@ -47,6 +49,9 @@ function quantity(svg,id){
 
     function dragged(d) {
     	positions[id] = d3.event.x;
+    	if (d3.event.x > svg.attr("width") - 5){
+    	    	positions[id] = svg.attr("width") - 5;
+    	} 
       	d3.select(this)
       	.attr("x1", positions[id] ).attr("x2", positions[id] )
       	.attr("cursor",  "ew-resize");
@@ -71,7 +76,7 @@ function quantity(svg,id){
 
 function hor_line(svg,id,mask){ // mask = [no, above, bellow]
 
-	var h_line = svg.append("g");
+	var h_line = svg.append("g").attr("class", "hor_line");
 
 	   if (mask == "above") {
     	var y_mask = 0;
@@ -107,16 +112,17 @@ function hor_line(svg,id,mask){ // mask = [no, above, bellow]
 	var line = h_line.append("line")          // attach a line
 				.attr("id" , id+"_line")
 				.attr("class", "h_line")
-                .style("stroke", "black")  // colour the line
-                .style("stroke-width","3")
                 .attr("x1", 0)     // x position of the first end of the line
                 .attr("y1", positions[id])      // y position of the first end of the line
                 .attr("x2", positions["quantity"])     // x position of the second end of the line
-                .attr("y2", positions[id]) 
+                .attr("y2", positions[id])
+                .on("mouseover", dragstarted)
+                .on("mouseout", dragended)
                 .call(d3.drag()
-                    .on("start", dragstarted)
+                   // .on("start", dragstarted)
                     .on("drag", dragged)
-                    .on("end", dragended))
+                   // .on("end", dragended)
+                   )
                 ;
 
 
@@ -190,16 +196,16 @@ function update_lines(id){
 		d3.select("#"+id+"_label")
       		.attr("y", positions[id] + 15);
 	}
+
 	if (id == "price"){
-		if (positions[id]-10 <= positions["effort"]){
-			positions["effort"] = positions[id] - 10;
-			d3.select("#effort_line")
-      			.attr("y1", positions[id]-10 ).attr("y2", positions[id]-10 );
-      		d3.select("#effort_mask")	
-      			.attr('y' , positions[id] - 10 )
-      			.attr('height' , svg.attr('height') - positions[id]+10);
-      		d3.select("#effort_label")
-      		.attr("y", positions[id] + 5);	
+		if (linkPriceEffort > 10){
+			if (positions[id]-linkPriceEffort != positions["effort"]){
+				priceEffortLink(id);
+			}
+		}else{
+			if (positions[id]-linkPriceEffort <= positions["effort"]){
+				priceEffortLink(id);
+			}
 		}
 
 	}
@@ -214,6 +220,17 @@ function update_lines(id){
 	
 }
 
+function priceEffortLink(id){
+			positions["effort"] = positions[id] - linkPriceEffort;
+			d3.select("#effort_line")
+      			.attr("y1", positions[id]-linkPriceEffort ).attr("y2", positions[id]-linkPriceEffort );
+      		d3.select("#effort_mask")	
+      			.attr('y' , positions[id] - linkPriceEffort )
+      			.attr('height' , svg.attr('height') - positions[id]+linkPriceEffort);
+      		d3.select("#effort_label")
+      		.attr("y", positions["effort"] + 15);	
+}
+
 function MarginalCost(quantValue){
 	if (quantValue < MOC){
 		var marginal_cost = (MOC - quantValue ) / MOC;
@@ -224,9 +241,9 @@ function MarginalCost(quantValue){
 	return marginal_cost * startCost + startCost/3;
 }
 
-function fixedCost(){
-	if (positions["benefits"] < 50){
-		fc = 50 - positions["benefits"];
+function fixedCost(height){
+	if ( height < 80 ){
+		fc = 50 - height;
 	}else{
 		fc = 1;
 	}
@@ -257,6 +274,9 @@ function DrawMoc(){
 
 function calculate_value(){
 	var value = 0;
+	var count_above = 0;
+	var count_bellow = 0;
+	var count_out = 0;
 	var customers = 0;
 	var revenue = 0;
 	var cost = 0;
@@ -264,20 +284,35 @@ function calculate_value(){
 	var marginal_cost = MarginalCost(positions["quantity"]);
 
 	for (var i = 0; i < agents.length; ++i) {
-			if ( ( agents[i].posY < positions["effort"]) && (agents[i].posY > positions["benefits"] ) && 
-				(agents[i].posX < positions["quantity"] )){
-				value += positions["effort"] - agents[i].posY ;
-				revenue += svg.attr('height') - positions["price"];
-				cost += marginal_cost;
-				customers ++;
-			}
+		if 	(agents[i].posX > positions["quantity"] ){
+						count_out ++;
+			} else {
+				if  ( agents[i].posY > positions["effort"]) {
+					count_bellow ++;
+				} else {	
+					if (agents[i].posY < positions["benefits"] ) {
+						count_above ++;
+					} else {
+						
+
+								value += positions["effort"] - agents[i].posY ;
+								revenue += svg.attr('height') - positions["price"];
+								cost += marginal_cost;
+								customers ++;
+						}
+					}			
+				}
         }
-    cost += fixedCost();
+    cost += fixedCost(positions["benefits"]);
+    var percCust = 100*customers/numberAgents;
         
     $("#value").text(value.toFixed(0));
     $("#revenue").text(revenue.toFixed(0));  
     $("#profit").text(revenue.toFixed(0) - cost.toFixed(0));  
     $("#cost").text(cost.toFixed(0));
-    $("#customers").text((100*customers/numberAgents).toFixed(0));
-    //console.log("Value="+value+", Revenue="+revenue + ", MC="+marginal_cost) ;   
+    $("#customers").text(percCust.toFixed(0));
+    $("#valCost").text((percCust*(revenue - cost)/100).toFixed(0));
+
+
+    console.log("Above="+ (100*count_above/numberAgents) +", Bellow="+(100*count_bellow/numberAgents) + ", Out="+(100*count_out/numberAgents) ) ;   
 }
