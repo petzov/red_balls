@@ -287,14 +287,16 @@ function calculate_value(){
 		if 	(agents[i].posX > positions["quantity"] ){
 						count_out ++;
 			} else {
-				if  ( agents[i].posY > positions["effort"]) {
+				// if  ( agents[i].posY > positions["effort"]) {
+				// 	count_bellow ++;
+				if  ( agents[i].price_w > positions["price"]) {
 					count_bellow ++;
+
+
 				} else {	
 					if (agents[i].posY < positions["benefits"] ) {
 						count_above ++;
-					} else {
-						
-
+					} else {						
 								value += positions["effort"] - agents[i].posY ;
 								revenue += svg.attr('height') - positions["price"];
 								cost += marginal_cost;

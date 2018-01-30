@@ -19,6 +19,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     <script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script>
     <script src="js/lines.js"></script>
     <script src="js/listAgents.js"></script>
+    <script src="js/product.js"></script>
+    <script src="js/functions.js"></script>
      <!-- <script src="https://d3js.org/d3-drag.v1.min.js"></script> -->
      <style>
 
@@ -50,7 +52,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
 <script>
 
-    var numberAgents = 30;  // 1 - 100
+    var numberAgents = 5;  // 1 - 100
     var MOC = 600; // Minimal optimal cost
     var agents = []; // global array representing balls
     var boxes = [];
@@ -59,12 +61,14 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
     var cutCost = 1;
     var linkPriceEffort = 10;  // 10 = no link
 
+    var intro = 1;
+
     positions["benefits"] = 60;
     positions["price"] = 150;
     positions["effort"] = positions["price"] - linkPriceEffort;
     positions["quantity"] = 80;
     var sortAgents = [];
-
+    var products = [];
 
 
     function Initialize(containerId) {
@@ -87,7 +91,6 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         //.attr("transform", "translate(" + 1 + "," + 1 + ")")
         ;
 
-
         return svg;
     }
 
@@ -101,8 +104,40 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         //     x += xOffset; 
         // }
 
+        var sortedY = [];
         for (var i = 0; i < numberAgents; ++i) {
-            agents.push(new Agent(svg, x, parseInt(listAgents[i].y), "s"+i, 'red', 50));
+            sortedY.push(parseInt(listAgents[i].y));
+        }
+
+        if (intro == 1){
+            // Ordered sorted agents:
+            sortedY.sort((a, b) => (b - a));    
+        }
+
+        if (intro != 1){
+            hor_line(svg,"benefits", "above");
+            hor_line(svg,"effort", "bellow"); // Effort line
+            hor_line(svg,"price", "bellow");
+            quantity(svg,"quantity");
+            calculate_value();
+            DrawMoc();
+        } else {
+            products.push(new Product("F1","red"));
+            products.push(new Product( "F2", "blue"));
+
+            products[0].AddFeature(svg, 30, 0,  "F1", 200, 130, 10, "red");  // Feature(svg, xBase, yBase, id, width, perf, cost, color);
+            products[0].AddFeature(svg, 35, 10,  "F1", 190, 150, 20, "blue");
+            products[0].AddFeature(svg, 38, 30,  "F1", 186, 150, 20, "green");
+
+            products[1].AddFeature(svg, 600, 0,  "F2", 300, 130, 30, "red");  // Feature(svg, xBase, yBase, id, width, perf, cost, color)
+            products[1].AddFeature(svg, 605, 30,  "F2", 290, 200, 30, "blue");
+            products[1].AddFeature(svg, 608, 60,  "F2", 280, 260, 30, "green");
+
+        }
+               
+
+        for (var i = 0; i < numberAgents; ++i) {
+            agents.push(new Agent(svg, x, sortedY[i], "s"+i, 'grey', 50));
             agents[i].Draw();
             x += xOffset; 
             quant_x = ('0000'+i).substring((""+i).length);
@@ -111,15 +146,11 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
 
         sortAgents.sort((a, b) => (b - a));  // sorts the agents by Y
 
-        hor_line(svg,"benefits", "above");
-       // hor_line(svg,"effort", "bellow"); // Effort line
-        hor_line(svg,"price", "bellow");
+ 
 
-        quantity(svg,"quantity");
-        calculate_value();
-        DrawMoc();
-        agents[0].FollowTarget(agents[0].posX + 5);
+        //agents[0].FollowTarget(agents[0].posX + 5);
       //  costPerAgent();
+        agentToProduct();
     }
 
     function costPerAgent(){
@@ -131,6 +162,35 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
             var mc = MarginalCost(listAgents[indAgent].x );
             console.log("x="+indAgent+",y="+(300-agentY)+" Fc = "+fc+",mc="+mc+" Tot:="+(fc+mc));
             $("#s"+indAgent+"_label").text((fc+mc).toFixed(0));
+        }    
+    }
+
+       function agentToProduct(){
+        for (var i = 0; i < agents.length; ++i) {
+            //agentY = parseInt(sortAgents[i].slice(0,-4)) ;
+            //var indAgent = parseInt(sortAgents[i].slice(-4));
+            var bestProduct = -1;
+            var oldValue = 0;
+            for (var j = 0; j < products.length; ++j) {
+                var utility = productValue(i,j);
+                if ( utility > oldValue) {
+                    bestProduct = j;
+                    oldValue = utility;
+                }
+            }
+            
+            if (bestProduct > -1) {
+            console.log("Evaluation:"+i+",Value:"+bestProduct);
+                d3.select("circle#s"+i).style("fill", products[bestProduct].color);
+            } else {
+                console.log("Evaluation:"+i+", No match");
+            }    
+
+            var fc = fixedCost(i)/(i+1);
+            
+            var mc = MarginalCost(listAgents[i].x );
+            //console.log("x="+indAgent+",y="+(300-agentY)+" Fc = "+fc+",mc="+mc+" Tot:="+(fc+mc));
+           // $("#s"+indAgent+"_label").text((fc+mc).toFixed(0));
         }    
     }
   

@@ -7,23 +7,37 @@
         this.svg = svg; // parent SVG
         this.id = id; // id of paddle
         this.data = [this.id]; // allow us to use d3.enter()
+        this.price_w = y + (svg.attr('height') - y)*0.5
         var thisobj = this; // i like to use thisobj instead of this. this many times not reliable particularly handling evnet
 
         this.Draw = function () {
-            var svg = thisobj.svg.append("g");
+            var svg = thisobj.svg.append("g").attr("id" , "g"+thisobj.id);
             var agent = svg.selectAll('#' + thisobj.id)
                         .data(thisobj.data);
                     ;
             var circle1 = agent.enter()
                 .append("circle")
                 .attr("id" , thisobj.id) 
-                .attr("index" , 100)
                 .attr("class" , "ball")
                 //.attr("r" , thisobj.radius)
                 //.attr("weight" , thisobj.weight)
                 .style("fill", thisobj.color)
                 .attr("cx", thisobj.posX)
                 .attr("cy", thisobj.posY)
+                .attr("r" , this.radius)
+                ;
+
+
+
+            var price = agent.enter()
+                .append("circle")
+                .attr("id" , "price_"+thisobj.id) 
+                .attr("class" , "ball")
+                //.attr("r" , thisobj.radius)
+                //.attr("weight" , thisobj.weight)
+                .style("fill", "black")
+                .attr("cx", thisobj.posX)
+                .attr("cy", thisobj.price_w)
                 .attr("r" , this.radius)
                 ;
 
@@ -35,7 +49,7 @@
                 .attr("x1", thisobj.posX)     // x position of the first end of the line
                 .attr("y1", thisobj.posY+this.radius)      // y position of the first end of the line
                 .attr("x2", thisobj.posX)     // x position of the second end of the line
-                .attr("y2", 300) 
+                .attr("y2", thisobj.price_w) 
                 ;
 
             // var label =  agent.enter().append("text")   
@@ -49,6 +63,15 @@
             //     ;     
 
         }
+
+        this.FollowTarget = function (x) {
+            var svg = thisobj.svg;
+            thisobj.posX = x;
+            svg.selectAll('#' + thisobj.id).attr("cx", thisobj.posX);
+            svg.selectAll('#g' + thisobj.id +" > line").attr("x1", thisobj.posX).attr("x2", thisobj.posX);
+
+        }
+
             
 
     }
