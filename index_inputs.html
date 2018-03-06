@@ -126,8 +126,8 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
             products.push(new Product( "F2", "blue"));
 
             products[0].AddFeature(svg, 30, 0,  "F1", 200, 130, 10, "red");  // Feature(svg, xBase, yBase, id, width, perf, cost, color);
-            products[0].AddFeature(svg, 35, 10,  "F1", 190, 150, 20, "blue");
-            products[0].AddFeature(svg, 38, 30,  "F1", 186, 150, 20, "green");
+            products[0].AddFeature(svg, 33, 10,  "F1", 194, 150, 20, "blue");
+            products[0].AddFeature(svg, 36, 30,  "F1", 188, 190, 20, "green");
 
             products[1].AddFeature(svg, 600, 0,  "F2", 300, 130, 30, "red");  // Feature(svg, xBase, yBase, id, width, perf, cost, color)
             products[1].AddFeature(svg, 605, 30,  "F2", 290, 200, 30, "blue");
@@ -165,34 +165,7 @@ http://bl.ocks.org/atul-github/0019158da5d2f8499f7f
         }    
     }
 
-       function agentToProduct(){
-        for (var i = 0; i < agents.length; ++i) {
-            //agentY = parseInt(sortAgents[i].slice(0,-4)) ;
-            //var indAgent = parseInt(sortAgents[i].slice(-4));
-            var bestProduct = -1;
-            var oldValue = 0;
-            for (var j = 0; j < products.length; ++j) {
-                var utility = productValue(i,j);
-                if ( utility > oldValue) {
-                    bestProduct = j;
-                    oldValue = utility;
-                }
-            }
-            
-            if (bestProduct > -1) {
-            console.log("Evaluation:"+i+",Value:"+bestProduct);
-                d3.select("circle#s"+i).style("fill", products[bestProduct].color);
-            } else {
-                console.log("Evaluation:"+i+", No match");
-            }    
 
-            var fc = fixedCost(i)/(i+1);
-            
-            var mc = MarginalCost(listAgents[i].x );
-            //console.log("x="+indAgent+",y="+(300-agentY)+" Fc = "+fc+",mc="+mc+" Tot:="+(fc+mc));
-           // $("#s"+indAgent+"_label").text((fc+mc).toFixed(0));
-        }    
-    }
   
     function randomInt(min,max){
         return Math.floor(Math.random()*(max-min+1)+min);
